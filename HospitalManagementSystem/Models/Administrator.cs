@@ -135,6 +135,54 @@ namespace HospitalManagementSystem.Models
             Console.ReadKey();
         }
 
+        private void AddReceptionist()
+        {
+            Console.Clear();
+            Console.WriteLine("\n========== ADD NEW RECEPTIONIST ==========");
+
+            try
+            {
+                Console.Write("Enter Receptionist Name: ");
+                string name = Console.ReadLine();
+
+                Console.Write("Enter Password: ");
+                string password = Console.ReadLine();
+
+                Console.Write("Enter Phone Number: ");
+                string phone = Console.ReadLine();
+
+                Console.Write("Enter Address: ");
+                string address = Console.ReadLine();
+
+                Console.Write("Enter Email: ");
+                string email = Console.ReadLine();
+
+                Console.Write("Enter Shift (Morning/Evening/Night): ");
+                string shift = Console.ReadLine();
+
+                // Validate inputs
+                if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(password))
+                {
+                    Console.WriteLine("\nError: Name and Password are required fields.");
+                }
+                else
+                {
+                    var receptionist = new Receptionist(name, password, phone, address, email, shift);
+                    DataManager.AddReceptionist(receptionist);
+
+                    Console.WriteLine($"\nReceptionist added successfully!");
+                    Console.WriteLine($"Generated ID: {receptionist.ID}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"\nError adding receptionist: {ex.Message}");
+            }
+
+            Console.WriteLine("\nPress any key to return to menu...");
+            Console.ReadKey();
+        }
+
         private void CheckDoctorDetails()
         {
             Console.Clear();

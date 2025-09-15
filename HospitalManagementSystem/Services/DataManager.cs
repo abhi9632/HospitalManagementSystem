@@ -18,12 +18,14 @@ namespace HospitalManagementSystem.Services
         private static readonly string DoctorsFile = Path.Combine(DataDirectory, "doctors.txt");
         private static readonly string AdminsFile = Path.Combine(DataDirectory, "admins.txt");
         private static readonly string AppointmentsFile = Path.Combine(DataDirectory, "appointments.txt");
+        private static readonly string ReceptionistsFile = Path.Combine(DataDirectory, "receptionists.txt");
 
         // In-memory collections
         private static List<Patient> patients = new List<Patient>();
         private static List<Doctor> doctors = new List<Doctor>();
         private static List<Administrator> administrators = new List<Administrator>();
         private static List<Appointment> appointments = new List<Appointment>();
+        private static List<Receptionist> receptionists = new List<Receptionist>();
 
         /// <summary>
         /// Initialize the data manager and load all data
@@ -42,6 +44,7 @@ namespace HospitalManagementSystem.Services
                 LoadPatients();
                 LoadDoctors();
                 LoadAdministrators();
+                LoadReceptionists();
                 LoadAppointments();
 
                 // If no data exists, create default admin
@@ -94,6 +97,9 @@ namespace HospitalManagementSystem.Services
         {
             patients.Add(patient);
             SavePatients();
+
+            // Send registration email (bonus feature)
+            EmailService.SendPatientRegistrationEmail(patient);
         }
 
         public static void UpdatePatient(Patient patient)
@@ -287,6 +293,65 @@ namespace HospitalManagementSystem.Services
 
         #endregion
 
+        #region Receptionist Operations (Bonus Feature)
+
+        public static List<Receptionist> GetAllReceptionists()
+        {
+            return receptionists;
+        }
+
+        public static void AddReceptionist(Receptionist receptionist)
+        {
+            receptionists.Add(receptionist);
+            SaveReceptionists();
+        }
+
+        private static void LoadReceptionists()
+        {
+            try
+            {
+                if (File.Exists(ReceptionistsFile))
+                {
+                    string[] lines = File.ReadAllLines(ReceptionistsFile);
+                    foreach (string line in lines)
+                    {
+                        if (!string.IsNullOrEmpty(line))
+                        {
+                            Receptionist receptionist = Receptionist.FromFileFormat(line);
+                            if (receptionist != null)
+                            {
+                                receptionists.Add(receptionist);
+                                IDGenerator.RegisterID(receptionist.ID);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading receptionists: {ex.Message}");
+            }
+        }
+
+        private static void SaveReceptionists()
+        {
+            try
+            {
+                List<string> lines = new List<string>();
+                foreach (var receptionist in receptionists)
+                {
+                    lines.Add(receptionist.ToFileFormat());
+                }
+                File.WriteAllLines(ReceptionistsFile, lines);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error saving receptionists: {ex.Message}");
+            }
+        }
+
+        #endregion
+
         #region Appointment Operations
 
         public static List<Appointment> GetAllAppointments()
@@ -331,6 +396,14 @@ namespace HospitalManagementSystem.Services
         {
             appointments.Add(appointment);
             SaveAppointments();
+
+            // Send appointment confirmation email (bonus feature)
+            var patient = GetPatientById(appointment.PatientID);
+            var doctor = GetDoctorById(appointment.DoctorID);
+            if (patient != null && doctor != null)
+            {
+                EmailService.SendAppointmentConfirmationEmail(patient, doctor, appointment);
+            }
         }
 
         private static void LoadAppointments()
@@ -404,6 +477,13 @@ namespace HospitalManagementSystem.Services
                     return admin;
             }
 
+            // Check receptionists (bonus feature)
+            foreach (var receptionist in receptionists)
+            {
+                if (receptionist.ID == id && receptionist.Password == password)
+                    return receptionist;
+            }
+
             return null;
         }
 
@@ -446,6 +526,11 @@ namespace HospitalManagementSystem.Services
             patients.Add(patient2);
             SavePatients();
 
+            // Create sample receptionist (bonus feature)
+            Receptionist receptionist1 = new Receptionist("Sarah Wilson", "pass123", "555-3001", "789 Reception St", "sarah@hospital.com", "Morning");
+            receptionists.Add(receptionist1);
+            SaveReceptionists();
+
             // Create sample appointments
             Appointment appointment1 = new Appointment(doctor1.ID, patient1.ID, "Regular checkup");
             Appointment appointment2 = new Appointment(doctor2.ID, patient2.ID, "Vaccination");
@@ -459,6 +544,7 @@ namespace HospitalManagementSystem.Services
             Console.WriteLine($"Doctor 2 - ID: {doctor2.ID}, Password: pass123");
             Console.WriteLine($"Patient 1 - ID: {patient1.ID}, Password: pass123");
             Console.WriteLine($"Patient 2 - ID: {patient2.ID}, Password: pass123");
+            Console.WriteLine($"Receptionist - ID: {receptionist1.ID}, Password: pass123");
             Console.WriteLine("================================\n");
             Console.WriteLine("Press any key to continue...");
             Console.ReadKey();

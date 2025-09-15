@@ -218,6 +218,7 @@ namespace HospitalManagementSystem.Models
 
             Console.WriteLine("\nAppointment booked successfully!");
             Console.WriteLine($"Appointment ID: {appointment.ID}");
+            Console.WriteLine("Confirmation email has been sent to your email address.");
 
             Console.WriteLine("\nPress any key to return to menu...");
             Console.ReadKey();
